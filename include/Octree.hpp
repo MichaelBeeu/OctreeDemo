@@ -1,8 +1,11 @@
 #ifndef __OCTREE_HPP__
 #     define __OCTREE_HPP__
 
+#include <iostream>
 #include <vector>
 #include <glm/glm.hpp>
+
+#include <Frustum.h>
 
 template <typename T>
 class Octree
@@ -23,18 +26,27 @@ public:
         maxData( max )
     {
         // Clear child array
-        std::fill( children, children+sizeof(children), reinterpret_cast<Octree<T>*>(NULL) );
-    }
-
-    virtual ~Octree(){
-        // Delete children
+        //std::fill( children, children+sizeof(children), reinterpret_cast<Octree<T>*>(NULL) );
         for(int i=0;i<8;i++){
-            delete children[i];
             children[i] = NULL;
         }
     }
 
+    virtual ~Octree(){
+        // Delete children
+        std::cout<<"~Octree"<<std::endl;
+        if( !isLeafNode() ){
+            for(int i=0;i<8;i++){
+                std::cout<<"Delete child "<<i<<std::endl;
+                delete children[i];
+                children[i] = NULL;
+            }
+        }
+        std::cout<<"End ~Octree"<<std::endl;
+    }
+
     bool isLeafNode() const {
+        std::cout<<"IsLeafNode?"<<std::endl;
         return children[0] == NULL;
     }
 
@@ -71,6 +83,19 @@ public:
 
     void insert( glm::vec3 pos, T d ){
         insert( dataPoint( pos, d ) );
+    }
+
+    void getOctantsInFrustum( const Frustum &frustum, std::vector< Octree<T>*> &out ){
+        int inFrustum = frustum.isBoxInFrustum( origin, halfDim );
+        if( inFrustum & 1 ){ // We are inside frustum
+            if( inFrustum & 2  && !isLeafNode() ){ // But only partially:
+                for(int i=0;i<8;i++){
+                    children[i]->getOctantsInFrustum( frustum, out );
+                }
+            } else { // Completely
+                out.push_back( this );
+            }
+        }
     }
 
     // Define some simple getters

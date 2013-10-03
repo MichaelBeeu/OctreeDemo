@@ -22,8 +22,8 @@ public:
     glm::vec4 getPlane( Plane p ) const;
     void calcPlanes( const glm::mat4 &matrix );
 
-    int halfPlaneTest(  const glm::vec3 &p, const glm::vec3 &normal, float offset );
-    int isBoxInFrustum( const glm::vec3 &origin, const glm::vec3 &halfDim );
+    int halfPlaneTest(  const glm::vec3 &p, const glm::vec3 &normal, float offset ) const;
+    int isBoxInFrustum( const glm::vec3 &origin, const glm::vec3 &halfDim ) const;
     /* Public data */
 protected:
     /* Protected data */

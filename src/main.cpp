@@ -46,6 +46,14 @@ int main( int argc, char **argv ) {
                 case SDL_QUIT:
                     running = false;
                 break;
+                case SDL_KEYDOWN:
+                    switch( evt.key.keysym.sym){
+                        case SDLK_ESCAPE:
+                            running = false;
+                        break;
+
+                    }
+                break;
                 default:
                 break;
             }
@@ -59,6 +67,13 @@ int main( int argc, char **argv ) {
         glm::mat4 mvp = projection * modelView;
 
         Frustum frustum( mvp );
+
+        SDL_GL_SwapWindow( window );
     }
+
+    SDL_DestroyRenderer( renderer );
+    SDL_DestroyWindow( window );
+
+    std::cout<<"Exit successful!"<<std::endl;
     return 0;
 }
