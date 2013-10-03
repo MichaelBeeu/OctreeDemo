@@ -72,7 +72,11 @@ public:
                 children[ getOctantFromPoint( p.first ) ]->insert( p );
             }
         } else { // We are not a leaf node
+            // Find best child to insert into
             findBestChild( p.first )->insert( p );
+            // We could just call children[ getOctantFromPoint(p.first) ]->insert(p)
+            // But, this way we can (possibly) try to avoid too much recursion,
+            // and it should be faster, as well.
         }
     }
 
@@ -83,11 +87,11 @@ public:
     void getOctantsInFrustum( const Frustum &frustum, std::vector< Octree<T>*> &out ){
         int inFrustum = frustum.isBoxInFrustum( origin, halfDim );
         if( inFrustum & 1 ){ // We are inside frustum
-            if( inFrustum & 2  && !isLeafNode() ){ // But only partially:
-                for(int i=0;i<8;i++){
+            if( inFrustum & 2  && !isLeafNode() ){ // Partially:
+                for(int i=0;i<8;i++){ // Find and add visible children
                     children[i]->getOctantsInFrustum( frustum, out );
                 }
-            } else { // Completely
+            } else { // Completely:
                 out.push_back( this );
             }
         }
@@ -130,6 +134,7 @@ private:
         return ret;
     }
 
+    // Get child index from point
     int getOctantFromPoint( const glm::vec3 &point ) const {
         int index = 0;
         if( point.x >= origin.x ) index |= 4;

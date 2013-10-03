@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Frustum.h"
 
 Frustum::Frustum( /* c'tor Params */ )
@@ -21,7 +22,7 @@ glm::vec4 Frustum::getPlane( Plane p ) const
 
 int Frustum::halfPlaneTest(  const glm::vec3 &p, const glm::vec3 &normal, float offset ) const {
     float dist = glm::dot( p, normal ) + offset;
-    if( dist >= 0.02 ) // Point is in front of plane
+    if( dist > 0.02 ) // Point is in front of plane
         return 1;
     else if( dist < -0.02 ) // Point is behind plane
         return 0;
@@ -39,33 +40,36 @@ int Frustum::isBoxInFrustum( const glm::vec3 &origin, const glm::vec3 &halfDim )
                                  glm::vec3( 1.f, 1.f,-1.f),
                                  glm::vec3( 1.f, 1.f, 1.f) 
                                             };
-    bool partial = false;
-    bool inside = true;
+    int c2 = 0;
+    // TODO: This can probably be sped up, or at least unrolled,
+    // but works for now.
+    // Test each plane
     for(int i=0;i<6;i++){
-        glm::vec3 planeNormal = glm::vec3(planes[i]);
-        int idx = vectorToIndex( planeNormal );
-        glm::vec3 testPoint = origin + halfDim * cornerOffsets[ idx ];
+        int c = 0;
+        for(int j=0;j<8;j++){
+            glm::vec3 testPoint = origin + halfDim * cornerOffsets[j];
 
-        if( halfPlaneTest( testPoint, planeNormal, planes[i].w ) == 0 ){
-            inside = false;
-            partial = false;
-            break;
+            int t = halfPlaneTest( testPoint, glm::vec3( planes[i] ), planes[i].w );
+            if( t > 0 )
+                c++;
         }
-
-        idx = vectorToIndex( -planeNormal );
-        testPoint = origin + halfDim * cornerOffsets[ idx ];
-
-        if( halfPlaneTest( testPoint, planeNormal, planes[i].w ) == 0 ){
-            partial = true;
+        if( c == 0 ){
+            c2 = 0;
+            break;
+        } else if( c == 8 ){
+            c2 ++;
         }
     }
-
-    return (inside?1:0) | (partial?2:0);
+    if( c2 == 6 ) return 1;
+    if( c2 > 0 ) return 3;
+    return 0;
+    //return (inside?1:0) | (partial?2:0);
 }
 
 void Frustum::calcPlanes( const glm::mat4 &matrix )
 {
     // Extract frustum planes from matrix
+    // Planes are in format: normal(xyz), offset(w)
     planes[Right ] = glm::vec4( matrix[0][3] - matrix[0][0],
                                 matrix[1][3] - matrix[1][0],
                                 matrix[2][3] - matrix[2][0],
@@ -102,6 +106,5 @@ void Frustum::calcPlanes( const glm::mat4 &matrix )
                            planes[i].z * planes[i].z );
         planes[i] /= invl;
     }
-    return /* something */;
 }
 

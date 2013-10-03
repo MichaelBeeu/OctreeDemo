@@ -63,9 +63,6 @@ void renderOctree( const Octree<float> *octree, bool debug = false ){
     std::vector< Octree<float>::dataPoint >::const_iterator it;
     octree->getData( data );
 
-    if( debug ){
-        renderBox( octree->getOrigin(), octree->getHalfDim(), glm::vec4(1.f,1.f,1.f,1.f) );
-    }
 
     glBegin( GL_POINTS );
     glColor4f( 1.f, 0.f, 0.f, 1.f );
@@ -85,6 +82,9 @@ void renderOctree( const Octree<float> *octree, bool debug = false ){
 void renderVisibleOctree( const std::vector<Octree<float>*> &octree, bool debug = false ){
     std::vector<Octree<float>*>::const_iterator it;
     for(it = octree.begin();it != octree.end(); it++){
+        if( debug ){
+            renderBox( (*it)->getOrigin(), (*it)->getHalfDim(), glm::vec4(1.f,1.f,1.f,1.f) );
+        }
         renderOctree( (*it), debug );
     }
 }
@@ -109,9 +109,12 @@ int main( int argc, char **argv ) {
 
     glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );
 
-    glm::mat4 model, view, projection;
+    glPointSize( 5.f );
 
-    projection = glm::perspective( 45.f, (float)WIDTH / (float)HEIGHT, 0.01f, 100.f );
+    glm::mat4 model, view, projection;
+    float rotation = 0;
+
+    projection = glm::perspective( 45.f, (float)WIDTH / (float)HEIGHT, 0.01f, 10.f );
     model = glm::mat4();
     view = glm::mat4();
 
@@ -135,7 +138,21 @@ int main( int argc, char **argv ) {
                         case SDLK_q:
                             octree.insert( randVec3(-1.f, 1.f), randRange(0.f,1.f) );
                         break;
+                        case SDLK_s:
+                            view = glm::translate( view, glm::vec3( 0.f, 0.f, -0.5f ) );
+                        break;
+                        case SDLK_w:
+                            view = glm::translate( view, glm::vec3( 0.f, 0.f, 0.5f ) );
+                        break;
+                        case SDLK_a:
+                            rotation -= 1.f;
+                        break;
+                        case SDLK_d:
+                            rotation += 1.f;
+                        break;
+                        default:
 
+                        break;
                     }
                 break;
                 default:
@@ -145,9 +162,12 @@ int main( int argc, char **argv ) {
 
         // Clear screen
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+        glm::mat4 camera = glm::rotate( view, 30.f, glm::vec3( 1.f, 0.f, 0.f ) );
+        camera = glm::rotate( camera, rotation, glm::vec3( 0.f, 1.f, 0.f ) );
         
         // Set up our matrices
-        glm::mat4 modelView = view * model;
+        glm::mat4 modelView = camera * model;
         glm::mat4 mvp = projection * modelView;
 
         glLoadMatrixf( &mvp[0][0] );
