@@ -12,12 +12,18 @@
 #define WIDTH 800
 #define HEIGHT 600
 
+typedef glm::vec3 OctreeType;
+
 inline float randRange( float min, float max ){
     return min + ( (max - min) * rand()) * (1.f / RAND_MAX);
 }
 
 inline glm::vec3 randVec3( float min, float max ){
     return glm::vec3( randRange(min, max), randRange(min, max), randRange(min, max) );
+}
+
+inline glm::vec3 randColor(){
+    return glm::vec3( randRange(0.f, 1.f), randRange(0.f, 1.f), randRange(0.f, 1.f) );
 }
 
 void renderBox( const glm::vec3 &center, const glm::vec3 &dim, const glm::vec4 &clr = glm::vec4(1.f,1.f,1.f,1.f)){
@@ -58,9 +64,9 @@ void renderBox( const glm::vec3 &center, const glm::vec3 &dim, const glm::vec4 &
 
 }
 
-void renderOctree( const Octree<float> *octree, bool debug = false ){
-    std::vector< Octree<float>::dataPoint > data;
-    std::vector< Octree<float>::dataPoint >::const_iterator it;
+void renderOctree( const Octree<OctreeType> *octree, bool debug = false ){
+    std::vector< Octree<OctreeType>::dataPoint > data;
+    std::vector< Octree<OctreeType>::dataPoint >::const_iterator it;
     octree->getData( data );
 
 
@@ -68,6 +74,8 @@ void renderOctree( const Octree<float> *octree, bool debug = false ){
     glColor4f( 1.f, 0.f, 0.f, 1.f );
     for(it = data.begin();it != data.end(); it++){
         glm::vec3 pos = (*it).first;
+        glm::vec3 color = (*it).second;
+        glColor3f( color.r, color.g, color.b );
         glVertex3f( pos.x, pos.y, pos.z );
     }
     glEnd();
@@ -79,8 +87,8 @@ void renderOctree( const Octree<float> *octree, bool debug = false ){
     }
 }
 
-void renderVisibleOctree( const std::vector<Octree<float>*> &octree, bool debug = false ){
-    std::vector<Octree<float>*>::const_iterator it;
+void renderVisibleOctree( const std::vector<Octree<OctreeType>*> &octree, bool debug = false ){
+    std::vector<Octree<OctreeType>*>::const_iterator it;
     for(it = octree.begin();it != octree.end(); it++){
         if( debug ){
             renderBox( (*it)->getOrigin(), (*it)->getHalfDim(), glm::vec4(1.f,1.f,1.f,1.f) );
@@ -120,8 +128,11 @@ int main( int argc, char **argv ) {
 
     view = glm::translate( view, glm::vec3( 0.f, 0.f, -8.f ) );
 
-    Octree<float> octree( glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f,1.f,1.f), 1 );
+    Octree<OctreeType> octree( glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f,1.f,1.f), 10 );
 
+    float t = 0.f;
+    bool debug = true;
+    bool autoAddPoints = false;
     bool running = true;
     while( running ){
         SDL_Event evt;
@@ -136,19 +147,25 @@ int main( int argc, char **argv ) {
                             running = false;
                         break;
                         case SDLK_q:
-                            octree.insert( randVec3(-1.f, 1.f), randRange(0.f,1.f) );
+                            octree.insert( randVec3(-1.f, 1.f), randColor() );
                         break;
                         case SDLK_s:
-                            view = glm::translate( view, glm::vec3( 0.f, 0.f, -0.5f ) );
+                            view = glm::translate( view, glm::vec3( 0.f, 0.f, -0.1f ) );
                         break;
                         case SDLK_w:
-                            view = glm::translate( view, glm::vec3( 0.f, 0.f, 0.5f ) );
+                            view = glm::translate( view, glm::vec3( 0.f, 0.f, 0.1f ) );
                         break;
                         case SDLK_a:
                             rotation -= 1.f;
                         break;
                         case SDLK_d:
                             rotation += 1.f;
+                        break;
+                        case SDLK_e:
+                            debug ^= true;
+                        break;
+                        case SDLK_r:
+                            autoAddPoints ^= true;
                         break;
                         default:
 
@@ -174,10 +191,21 @@ int main( int argc, char **argv ) {
 
         Frustum frustum( mvp );
 
-        std::vector< Octree<float>* > visible;
+        if( autoAddPoints ){
+            t += 0.07f;
+            float x = sin( t );
+            float y = cos( t ) * cos( t * 0.01f );
+            float z = sin( t * 0.01f ) * cos(t);
+            OctreeType clr(x,y,z);
+            clr += 1.f;
+            clr /= 2.f;
+            octree.insert( glm::vec3( x, y, z ), clr );
+        }
+
+        std::vector< Octree<OctreeType>* > visible;
         octree.getOctantsInFrustum( frustum, visible );
 
-        renderVisibleOctree( visible , true);
+        renderVisibleOctree( visible , debug );
 
         //renderBox( glm::vec3( 0.f, 0.f, 0.f ), glm::vec3( 1.f, 1.f, 1.f ) );
 
