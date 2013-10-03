@@ -1,7 +1,6 @@
 #ifndef __OCTREE_HPP__
 #     define __OCTREE_HPP__
 
-#include <iostream>
 #include <vector>
 #include <glm/glm.hpp>
 
@@ -10,9 +9,9 @@
 template <typename T>
 class Octree
 {
-private:
+public:
     typedef std::pair<glm::vec3, T> dataPoint;
-
+private:
     glm::vec3 origin; // The origin of our octant
     glm::vec3 halfDim; // Half dimension of the octant
 
@@ -34,19 +33,15 @@ public:
 
     virtual ~Octree(){
         // Delete children
-        std::cout<<"~Octree"<<std::endl;
         if( !isLeafNode() ){
             for(int i=0;i<8;i++){
-                std::cout<<"Delete child "<<i<<std::endl;
                 delete children[i];
                 children[i] = NULL;
             }
         }
-        std::cout<<"End ~Octree"<<std::endl;
     }
 
     bool isLeafNode() const {
-        std::cout<<"IsLeafNode?"<<std::endl;
         return children[0] == NULL;
     }
 
@@ -74,10 +69,10 @@ public:
 
                 data.clear();
 
-                children[ getOctantFromPoint( p.first() ) ]->insert( p );
+                children[ getOctantFromPoint( p.first ) ]->insert( p );
             }
         } else { // We are not a leaf node
-            findBestChild( p.first() )->insert( p );
+            findBestChild( p.first )->insert( p );
         }
     }
 
@@ -108,9 +103,13 @@ public:
         return halfDim;
     }
 
-    Octree<T> getChild( unsigned int i ) const {
-        if( i >= 8 ) return NULL;
+    Octree<T> *getChild( unsigned int i ) const {
+        //if( i >= 8 ) return NULL;
         return children[i];
+    }
+
+    void getData( std::vector<dataPoint> &out ) const {
+        out = data;
     }
     
     /* Public data */
