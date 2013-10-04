@@ -6,6 +6,7 @@
 
 #include <Frustum.h>
 
+// Much of the octree code is based on https://github.com/brandonpelfrey/SimpleOctree
 template <typename T>
 class Octree
 {

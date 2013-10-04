@@ -29,6 +29,7 @@ int Frustum::halfPlaneTest(  const glm::vec3 &p, const glm::vec3 &normal, float 
     return 2; // Point is on plane
 }
 
+// Code for box-frustum test based on: http://www.flipcode.com/archives/Octrees_For_Visibility.shtml
 int Frustum::isBoxInFrustum( const glm::vec3 &origin, const glm::vec3 &halfDim ) const {
     static const glm::vec3 cornerOffsets[] = {
                                  glm::vec3(-1.f,-1.f,-1.f),

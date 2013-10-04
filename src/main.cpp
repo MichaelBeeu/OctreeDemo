@@ -125,7 +125,6 @@ int main( int argc, char **argv ) {
 
     glm::mat4 model, view, projection;
     glm::quat viewRot = glm::angleAxis( 0.f, glm::vec3( 1.f, 0.f, 0.f ) );
-    float rotation = 0;
 
     projection = glm::perspective( 45.f, (float)WIDTH / (float)HEIGHT, 0.01f, 10.f );
     model = glm::mat4();
@@ -189,8 +188,7 @@ int main( int argc, char **argv ) {
         // Clear screen
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-        glm::mat4 camera = glm::mat4_cast( viewRot ) * view;// glm::rotate( view, 30.f, glm::vec3( 1.f, 0.f, 0.f ) );
-        //camera = glm::rotate( camera, rotation, glm::vec3( 0.f, 1.f, 0.f ) );
+        glm::mat4 camera = glm::mat4_cast( viewRot ) * view;
         
         // Set up our matrices
         glm::mat4 modelView = camera * model;
@@ -215,8 +213,6 @@ int main( int argc, char **argv ) {
         octree.getOctantsInFrustum( frustum, visible );
 
         renderVisibleOctree( visible , debug );
-
-        //renderBox( glm::vec3( 0.f, 0.f, 0.f ), glm::vec3( 1.f, 1.f, 1.f ) );
 
         SDL_GL_SwapWindow( window );
     }
