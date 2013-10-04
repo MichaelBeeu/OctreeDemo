@@ -40,30 +40,30 @@ int Frustum::isBoxInFrustum( const glm::vec3 &origin, const glm::vec3 &halfDim )
                                  glm::vec3( 1.f, 1.f,-1.f),
                                  glm::vec3( 1.f, 1.f, 1.f) 
                                             };
-    int c2 = 0;
-    // TODO: This can probably be sped up, or at least unrolled,
-    // but works for now.
-    // Test each plane
+    int ret = 1;
     for(int i=0;i<6;i++){
-        int c = 0;
-        for(int j=0;j<8;j++){
-            glm::vec3 testPoint = origin + halfDim * cornerOffsets[j];
+        glm::vec3 planeNormal = glm::vec3( planes[i] );
+        int idx = vectorToIndex( planeNormal );
 
-            int t = halfPlaneTest( testPoint, glm::vec3( planes[i] ), planes[i].w );
-            if( t > 0 )
-                c++;
-        }
-        if( c == 0 ){
-            c2 = 0;
+        // Test the farthest point of the box from the plane
+        // if it's behind the plane, then the entire box will be.
+        glm::vec3 testPoint = origin + halfDim * cornerOffsets[idx];
+
+        if( halfPlaneTest( testPoint, planeNormal, planes[i].w ) == 0){
+            ret = 0;
             break;
-        } else if( c == 8 ){
-            c2 ++;
+        }
+
+        // Now, test the closest point to the plane
+        // If it's behind the plane, then the box is partially inside, otherwise it is entirely inside.
+        idx = vectorToIndex( -planeNormal );
+        testPoint = origin + halfDim * cornerOffsets[idx];
+
+        if( halfPlaneTest( testPoint, planeNormal, planes[i].w ) == 0){
+            ret |= 2;
         }
     }
-    if( c2 == 6 ) return 1;
-    if( c2 > 0 ) return 3;
-    return 0;
-    //return (inside?1:0) | (partial?2:0);
+    return ret;
 }
 
 void Frustum::calcPlanes( const glm::mat4 &matrix )

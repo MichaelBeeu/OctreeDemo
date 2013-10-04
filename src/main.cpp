@@ -192,10 +192,10 @@ int main( int argc, char **argv ) {
         Frustum frustum( mvp );
 
         if( autoAddPoints ){
-            t += 0.07f;
+            t += 0.02f;
             float x = sin( t );
-            float y = cos( t ) * cos( t * 0.01f );
-            float z = sin( t * 0.01f ) * cos(t);
+            float y = cos( t ) * cos( t * 3.92f );
+            float z = sin( t * 3.92f ) * cos(t);
             OctreeType clr(x,y,z);
             clr += 1.f;
             clr /= 2.f;

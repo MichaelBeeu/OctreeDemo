@@ -35,7 +35,7 @@ private:
         int idx = 0;
         if( v.z >= 0 ) idx |= 1;
         if( v.y >= 0 ) idx |= 2;
-        if( v.z >= 0 ) idx |= 4;
+        if( v.x >= 0 ) idx |= 4;
         return idx;
     }
 };
