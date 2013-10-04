@@ -1,7 +1,7 @@
 Octree Demo
 ===========
 
-A simple demomonstration on using an octree for visibility occulsion.
+A simple demomonstration on using an octree for visibility detection.
 
 Keys
 ====
