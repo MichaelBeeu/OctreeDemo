@@ -5,6 +5,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #include "Frustum.h"
 #include "Octree.hpp"
@@ -107,6 +108,9 @@ int main( int argc, char **argv ) {
     // Create window and renderer
     SDL_CreateWindowAndRenderer( WIDTH, HEIGHT, SDL_WINDOW_OPENGL, &window, &renderer );
 
+    SDL_SetRelativeMouseMode( SDL_TRUE );
+    SDL_SetWindowGrab( window, SDL_TRUE );
+
     // Init opengl
     glClearColor( 0.f, 0.f, 0.f, 0.f );
     glClearDepth( 1.f );
@@ -120,6 +124,7 @@ int main( int argc, char **argv ) {
     glPointSize( 5.f );
 
     glm::mat4 model, view, projection;
+    glm::quat viewRot = glm::angleAxis( 0.f, glm::vec3( 1.f, 0.f, 0.f ) );
     float rotation = 0;
 
     projection = glm::perspective( 45.f, (float)WIDTH / (float)HEIGHT, 0.01f, 10.f );
@@ -141,6 +146,10 @@ int main( int argc, char **argv ) {
                 case SDL_QUIT:
                     running = false;
                 break;
+                case SDL_MOUSEMOTION:{
+                    glm::vec3 axis = glm::normalize( glm::vec3( (float)evt.motion.yrel, (float)evt.motion.xrel, 0.f ) ) * viewRot;
+                    viewRot = viewRot * glm::angleAxis( 1.f, axis );
+                 }break;
                 case SDL_KEYDOWN:
                     switch( evt.key.keysym.sym){
                         case SDLK_ESCAPE:
@@ -150,16 +159,16 @@ int main( int argc, char **argv ) {
                             octree.insert( randVec3(-1.f, 1.f), randColor() );
                         break;
                         case SDLK_s:
-                            view = glm::translate( view, glm::vec3( 0.f, 0.f, -0.1f ) );
+                            view = glm::translate( view, glm::vec3( 0.f, 0.f, -0.1f ) * viewRot );
                         break;
                         case SDLK_w:
-                            view = glm::translate( view, glm::vec3( 0.f, 0.f, 0.1f ) );
+                            view = glm::translate( view, glm::vec3( 0.f, 0.f, 0.1f ) * viewRot );
                         break;
                         case SDLK_a:
-                            rotation -= 1.f;
+                            view = glm::translate( view, glm::vec3( 0.1f, 0.f, 0.f ) * viewRot );
                         break;
                         case SDLK_d:
-                            rotation += 1.f;
+                            view = glm::translate( view, glm::vec3( -0.1f, 0.f, 0.f ) * viewRot );
                         break;
                         case SDLK_e:
                             debug ^= true;
@@ -180,8 +189,8 @@ int main( int argc, char **argv ) {
         // Clear screen
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-        glm::mat4 camera = glm::rotate( view, 30.f, glm::vec3( 1.f, 0.f, 0.f ) );
-        camera = glm::rotate( camera, rotation, glm::vec3( 0.f, 1.f, 0.f ) );
+        glm::mat4 camera = glm::mat4_cast( viewRot ) * view;// glm::rotate( view, 30.f, glm::vec3( 1.f, 0.f, 0.f ) );
+        //camera = glm::rotate( camera, rotation, glm::vec3( 0.f, 1.f, 0.f ) );
         
         // Set up our matrices
         glm::mat4 modelView = camera * model;
